@@ -1,23 +1,43 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class MainManager : MonoBehaviour
 {
+
+    public static MainManager Instance;
+    public Text PlayerName;
     public Brick BrickPrefab;
     public int LineCount = 6;
     public Rigidbody Ball;
 
+    public Text HighScoreText;
     public Text ScoreText;
     public GameObject GameOverText;
     
     private bool m_Started = false;
     private int m_Points;
+
+    private int m_HighScore;
     
     private bool m_GameOver = false;
 
+
+    private void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+        LoadHighScore();
+    }
     
     // Start is called before the first frame update
     void Start()
@@ -68,9 +88,54 @@ public class MainManager : MonoBehaviour
         ScoreText.text = $"Score : {m_Points}";
     }
 
+    [System.Serializable]
+    class SaveData
+    {
+        public int highScore;
+        public Text PlayerName;
+    }
+
+    public void SaveHighScore()
+    {
+        SaveData data = new SaveData();
+        data.highScore = m_Points;
+        data.PlayerName = PlayerName;
+
+        string json = JsonUtility.ToJson(data);
+
+        File.WriteAllText(Application.persistentDataPath + "/savefile.json", json);
+    }
+
+    public void LoadHighScore()
+    {
+        string path = Application.persistentDataPath + "/savefile.json";
+        if (File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            SaveData data = JsonUtility.FromJson<SaveData>(json);
+
+            m_HighScore = data.highScore;
+            PlayerName = data.PlayerName;
+            HighScoreText.text = $"High Score : {PlayerName} : {m_HighScore}";
+        }
+    }
+    public void CheckHighScore()
+    {
+        if (m_HighScore == 0 || m_Points > m_HighScore)
+        {
+            m_HighScore = m_Points;
+            HighScoreText.text = $"High Score : {PlayerName} : {m_HighScore}";
+        }
+        // else
+        // {
+        //     return;
+        // }
+    }
     public void GameOver()
     {
         m_GameOver = true;
+        CheckHighScore();
+        SaveHighScore();
         GameOverText.SetActive(true);
     }
 }

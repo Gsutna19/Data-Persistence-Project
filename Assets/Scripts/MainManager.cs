@@ -10,7 +10,7 @@ public class MainManager : MonoBehaviour
 {
 
     public static MainManager Instance;
-    public Text PlayerName;
+    public string playerName;
     public Brick BrickPrefab;
     public int LineCount = 6;
     public Rigidbody Ball;
@@ -21,31 +21,44 @@ public class MainManager : MonoBehaviour
     
     private bool m_Started = false;
     private int m_Points;
-
     private int m_HighScore;
-    
     private bool m_GameOver = false;
 
+    private int sceneCount = 0;
 
-    private void Awake()
-    {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-        LoadHighScore();
-    }
+
+    // private void Awake()
+    // {
+    //     if (Instance != null)
+    //     {
+    //         Destroy(gameObject);
+    //         return;
+    //     }
+    //     Instance = this;
+    //     DontDestroyOnLoad(gameObject);
+    //     LoadHighScore();
+    // }
     
-    // Start is called before the first frame update
+    // Start is called before the first frame update;
+    // Start not getting called on scene load after GameOver
     void Start()
     {
+        LoadHighScore();
+        if (string.IsNullOrEmpty(GameManager.Instance.currentName))
+        {
+            playerName = GameManager.Instance.PlayerNameInputField.text;
+            GameManager.Instance.currentName = playerName;
+        }
+        else
+        {
+            playerName = GameManager.Instance.currentName;
+        }
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
         int[] pointCountArray = new [] {1,1,2,2,5,5};
+        Debug.Log("Before tile building");
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
@@ -56,10 +69,14 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+        Debug.Log("After tile building");
+        // Set display name
+        // PlayerName = GameManager.Instance.pName;
     }
 
     private void Update()
     {
+        // CheckPlayerName();
         if (!m_Started)
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -77,7 +94,9 @@ public class MainManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                m_GameOver = false;
+                // m_Started = false;
+                SceneManager.LoadScene(1);
             }
         }
     }
@@ -92,14 +111,13 @@ public class MainManager : MonoBehaviour
     class SaveData
     {
         public int highScore;
-        public Text PlayerName;
+        public string playerName;
     }
-
     public void SaveHighScore()
     {
         SaveData data = new SaveData();
         data.highScore = m_Points;
-        data.PlayerName = PlayerName;
+        data.playerName = playerName;
 
         string json = JsonUtility.ToJson(data);
 
@@ -115,27 +133,35 @@ public class MainManager : MonoBehaviour
             SaveData data = JsonUtility.FromJson<SaveData>(json);
 
             m_HighScore = data.highScore;
-            PlayerName = data.PlayerName;
-            HighScoreText.text = $"High Score : {PlayerName} : {m_HighScore}";
+            playerName = data.playerName;
+            HighScoreText.text = $"High Score : {playerName} : {m_HighScore}";
         }
     }
     public void CheckHighScore()
     {
+        // m_HighScore = GameManager.Instance.hScore;
+        // playerName = GameManager.Instance.pName;
         if (m_HighScore == 0 || m_Points > m_HighScore)
         {
             m_HighScore = m_Points;
-            HighScoreText.text = $"High Score : {PlayerName} : {m_HighScore}";
+            HighScoreText.text = $"High Score : {playerName} : {m_HighScore}";
+            SaveHighScore();
         }
-        // else
-        // {
-        //     return;
-        // }
+        else if (m_HighScore == 96)
+        {
+            m_HighScore = 0;
+            SaveHighScore();
+        }
+    }
+    private void CheckPlayerName()
+    {
+        Debug.Log(playerName);
     }
     public void GameOver()
     {
         m_GameOver = true;
         CheckHighScore();
-        SaveHighScore();
+        // SaveHighScore();
         GameOverText.SetActive(true);
     }
 }

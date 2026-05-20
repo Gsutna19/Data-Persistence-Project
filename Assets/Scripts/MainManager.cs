@@ -9,7 +9,7 @@ using TMPro;
 public class MainManager : MonoBehaviour
 {
 
-    public static MainManager Instance;
+    public static MainManager Instance { get; private set;}
     public string playerName;
     public Brick BrickPrefab;
     public int LineCount = 6;
@@ -24,23 +24,6 @@ public class MainManager : MonoBehaviour
     private int m_HighScore;
     private bool m_GameOver = false;
 
-    private int sceneCount = 0;
-
-
-    // private void Awake()
-    // {
-    //     if (Instance != null)
-    //     {
-    //         Destroy(gameObject);
-    //         return;
-    //     }
-    //     Instance = this;
-    //     DontDestroyOnLoad(gameObject);
-    //     LoadHighScore();
-    // }
-    
-    // Start is called before the first frame update;
-    // Start not getting called on scene load after GameOver
     void Start()
     {
         LoadHighScore();
@@ -58,7 +41,6 @@ public class MainManager : MonoBehaviour
         int perLine = Mathf.FloorToInt(4.0f / step);
         
         int[] pointCountArray = new [] {1,1,2,2,5,5};
-        Debug.Log("Before tile building");
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
@@ -69,14 +51,10 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
-        Debug.Log("After tile building");
-        // Set display name
-        // PlayerName = GameManager.Instance.pName;
     }
 
     private void Update()
     {
-        // CheckPlayerName();
         if (!m_Started)
         {
             if (Input.GetKeyDown(KeyCode.Space))
@@ -95,7 +73,6 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 m_GameOver = false;
-                // m_Started = false;
                 SceneManager.LoadScene(1);
             }
         }
@@ -139,29 +116,18 @@ public class MainManager : MonoBehaviour
     }
     public void CheckHighScore()
     {
-        // m_HighScore = GameManager.Instance.hScore;
-        // playerName = GameManager.Instance.pName;
         if (m_HighScore == 0 || m_Points > m_HighScore)
         {
             m_HighScore = m_Points;
             HighScoreText.text = $"High Score : {playerName} : {m_HighScore}";
             SaveHighScore();
         }
-        else if (m_HighScore == 96)
-        {
-            m_HighScore = 0;
-            SaveHighScore();
-        }
     }
-    private void CheckPlayerName()
-    {
-        Debug.Log(playerName);
-    }
+
     public void GameOver()
     {
         m_GameOver = true;
         CheckHighScore();
-        // SaveHighScore();
         GameOverText.SetActive(true);
     }
 }

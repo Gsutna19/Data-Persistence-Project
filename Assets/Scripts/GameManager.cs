@@ -6,7 +6,7 @@ using System.IO;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static GameManager Instance { get; private set; }
     public Text HighScoreText;
     public Text ScoreText;
     public int hScore = 0;
